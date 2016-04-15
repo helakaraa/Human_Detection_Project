@@ -1,0 +1,124 @@
+ 
+ function det=SVMClassification(Img)
+
+% the folder which contains positive images
+ Filepos = dir('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\trainingpos\*.png');
+ %the folder which contains negative samples
+ Fileneg=  dir('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\training1\*.jpg');
+ 
+ %the folder which contains Testing images
+ Ftesting= dir('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\Testhela1\*.jpg');
+ 
+ N=length(Filepos)+length(Fileneg);
+ 
+%appliquer le descripteur sur les images positives de trainnig 
+     for i=1:length(Filepos)
+           file2= strcat('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\trainingpos\',Filepos(i).name);
+           L=imread(file2);
+           imwrite(L, 'File.jpg');
+           I=imresize(L,[128 64]);
+           %  K=cs1lbp(I);
+           DataSet2(i,:)=CSHOGRGB(I);
+      end
+ 
+ %Appliquer le descripteur sur les images negatives de trainnig 
+
+  for i=1:length(Fileneg)
+          file1= strcat('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\training1\',Fileneg(i).name);
+          L=imread(file1);
+          I=imresize(L,[128 64]);
+          %  K=cs1lbp(I);
+          DataSet1(i,:)=CSHOGRGB(I);
+  end
+  
+ DataSet=[DataSet1;DataSet2];
+ 
+%Appliquer le descripteur sur les images de test 
+
+ for j = 1 : (length(Ftesting)-1)
+        fil=strcat('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\Testhela1\',Ftesting(j).name);
+        L = imread(fil);
+        I=imresize(L,[128 64]);
+        %   K=cs1lbp(I);
+        TestSet(j,:)=CSHOGRGB(I);
+ end
+
+
+
+ %tester une image pour determiner si elle est human or not 
+ L = imread(Img);
+ I=imresize(L,[128 64]);
+ %K=cs1lbp(I);
+ TestSet(length(Ftesting),:)=CSHOGRGB(I);
+
+%generer les labels du test 
+ train_label               = zeros(size(N,1),1);
+ train_label(1:(N/2),1)   = 0;         % 0 = negative images
+ train_label((N/2)+1:N,1)  = 1;         % 1 = positive images 
+
+
+%Appliquer le classifieur SVM
+ SVMStruct = svmtrain(DataSet, train_label,'Kernel_Function', 'linear');
+ [classes,f]= svmclassify(SVMStruct, TestSet);
+
+  det=classes(length(Ftesting));
+
+% % % % Affichage de la courbe ROC 
+% % f=-f;
+% % true_label=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+% % [X,Y,T,AUC]=perfcurve(true_label,f,1);
+% % plot(X,Y);
+% % xlabel('False positive rate');
+% % ylabel('True positive rate');
+% % title('ROC for Classification');
+
+
+% % % % % Implementation de courbe ROC 2eme méthode
+% % vx=[1:80];
+% % y=0;
+% % hold on 
+% % plot(vx,y,'o-r') 
+% % plot(vx,f,'o-b') 
+% % legend('y=0','f');
+% % 
+% % 
+% V1=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+% V2=V1';
+% N=43;
+% P=37;
+% TP=0;
+% TN=0;
+% FN=0;
+% FP=0;
+% sens = [];
+% spec = [];
+% 
+% for i=1:80
+%     
+%    switch(V2(i))
+%     case 0
+%        if (classes(i)==0) 
+%        TN=TN+1;
+%        else
+%        FN=FN+1;
+%        end 
+%     case 1
+%         if (classes(i)==1)
+%             TP=TP+1;
+%         else 
+%             FP=FP+1;
+%         end
+%    end  
+%    
+%     spec(i)=(TN/TN+FP);
+%     sens(i)= (TP/TP+FN);
+% end
+% perfcurve
+%     
+% cspec=1-spec;
+% plot(cspec,sens);
+% xlabel('FALSE POSITIVE RATE');
+% ylabel('TRUE POSITIVE RATE');
+% title('RECEIVER OPERATING CHARACTERISTIC (ROC)');
+
+end
