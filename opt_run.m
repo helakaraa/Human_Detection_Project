@@ -1,6 +1,3 @@
-
-
-
 img1=imread('frame1.png');
 img2=imread('frame2.png');
 img1=imresize(img1, [120 175]);
