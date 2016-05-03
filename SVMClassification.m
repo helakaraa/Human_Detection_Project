@@ -2,23 +2,26 @@
  function det=SVMClassification(Img)
 
 % the folder which contains positive images
- Filepos = dir('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\trainingpos\*.png');
+ Filepos = dir('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\trainingpos\*.jpg');
  %the folder which contains negative samples
  Fileneg=  dir('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\training1\*.jpg');
+
  
- %the folder which contains Testing images
- Ftesting= dir('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\Testhela1\*.jpg');
+% % %  %the folder which contains Testing images
+% % %  Ftesting= dir('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\Testhela1\*.jpg');
  
  N=length(Filepos)+length(Fileneg);
+
  
 %appliquer le descripteur sur les images positives de trainnig 
      for i=1:length(Filepos)
            file2= strcat('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\trainingpos\',Filepos(i).name);
            L=imread(file2);
-           imwrite(L, 'File.jpg');
+%            imwrite(L, 'File.jpg');
            I=imresize(L,[128 64]);
-           %  K=cs1lbp(I);
-           DataSet2(i,:)=CSHOGRGB(I);
+%            K=CSLBP1(I);
+           DataSet2(i,:)=HOG(I);
+
       end
  
  %Appliquer le descripteur sur les images negatives de trainnig 
@@ -27,41 +30,48 @@
           file1= strcat('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\training1\',Fileneg(i).name);
           L=imread(file1);
           I=imresize(L,[128 64]);
-          %  K=cs1lbp(I);
-          DataSet1(i,:)=CSHOGRGB(I);
+          %K=cs1lbp(I);
+%           K=CSLBP1(I);
+          DataSet1(i,:)=HOG(I);
+
   end
   
  DataSet=[DataSet1;DataSet2];
+  %generer les labels du test 
+
+ train_label= zeros(size(N,1),1);
+ train_label(1:length(Filepos),1)  = 1;         % 1 = positive images 
+  train_label(length(Filepos):N,1)  = 0;         % 1 = positive images 
+
+
  
 %Appliquer le descripteur sur les images de test 
 
- for j = 1 : (length(Ftesting)-1)
-        fil=strcat('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\Testhela1\',Ftesting(j).name);
-        L = imread(fil);
-        I=imresize(L,[128 64]);
-        %   K=cs1lbp(I);
-        TestSet(j,:)=CSHOGRGB(I);
- end
+%  for j = 1 : (length(Ftesting)-1)
+%         fil=strcat('C:\Users\Hela\Documents\MATLAB\Human_Detection_Project\Testhela1\',Ftesting(j).name);
+%         L = imread(fil);
+%         I=imresize(L,[128 64]);
+%         %   K=cs1lbp(I);
+%         K=CSLBP1(I);
+%         TestSet(j,:)=HOG(K);
+%  end
 
 
 
- %tester une image pour determiner si elle est human or not 
- L = imread(Img);
- I=imresize(L,[128 64]);
+%tester une image pour determiner si elle est human or not 
+%  L = imread(Img);
+ I=imresize(Img,[128 64]);
  %K=cs1lbp(I);
- TestSet(length(Ftesting),:)=CSHOGRGB(I);
-
-%generer les labels du test 
- train_label               = zeros(size(N,1),1);
- train_label(1:(N/2),1)   = 0;         % 0 = negative images
- train_label((N/2)+1:N,1)  = 1;         % 1 = positive images 
+%  K=CSLBP1(I);
+ TestSet=HOG(I);
 
 
 %Appliquer le classifieur SVM
- SVMStruct = svmtrain(DataSet, train_label,'Kernel_Function', 'linear');
- [classes,f]= svmclassify(SVMStruct, TestSet);
+ options.MaxIter = 100000;
+ SVMStruct = svmtrain(DataSet, train_label,'Kernel_Function', 'linear','Options',options);
+ [classes,f]= svmclassify(SVMStruct, TestSet');
 
-  det=classes(length(Ftesting));
+  det=classes;
 
 % % % % Affichage de la courbe ROC 
 % % f=-f;
